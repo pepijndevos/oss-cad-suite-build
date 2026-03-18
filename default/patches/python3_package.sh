@@ -15,6 +15,13 @@ function python3_package_setup {
     elif [ ${ARCH} == 'darwin-arm64' ]; then
         sed -i 's,/yosyshq/,'${PYTHONHOME}/',g' ${PYTHONHOME}/lib/python3.11/_sysconfigdata__darwin_darwin.py
     fi
+    # Fix INCLUDEPY and CONFINCLUDEPY to point to cross-compiled Python headers
+    # instead of native Python headers. The cross-compiled pyconfig.h has correct
+    # platform defines (e.g. no HAVE_SYS_SELECT_H on Windows).
+    for syscfg in ${PYTHONHOME}/lib/python3.11/_sysconfigdata__*.py; do
+        sed -i "s|'INCLUDEPY': '${PYTHONHOME}/include|'INCLUDEPY': '${_PYTHON_PROJECT_BASE}/include|" "$syscfg"
+        sed -i "s|'CONFINCLUDEPY': '${PYTHONHOME}/include|'CONFINCLUDEPY': '${_PYTHON_PROJECT_BASE}/include|" "$syscfg"
+    done
     cp  ${PYTHONHOME}/lib/python3.11/_sysconfigdata__* ${_PYTHON_PROJECT_BASE}/lib/python3.11/.
 }
 
